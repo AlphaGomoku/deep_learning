@@ -105,20 +105,19 @@ def make_model(X, dropout_rate):
     fc_L3 = hidden_layer(fc_L2, 625, 625, dropout_rate)
     fc_L4 = hidden_layer(fc_L3, 625, 625, dropout_rate)
     fc_L4S = tf.add(fc_L4, fc_L1)
-    fc_L5 = output_layer(fc_L4S, 625, 10, dropout_rate)
+    fc_L5 = output_layer(fc_L4S, 625, 225, dropout_rate)
 
     last_fc_L = fc_L5
 
     return last_fc_L
 
 
-train_x_data, train_y_data = io_data.get_train_data(one_hot = True)
+train_x_data, train_y_data, test_x_data, test_y_data = io_data.get_train_test_data(one_hot = True)
 train_data_len = len(train_x_data)
-test_x_data, test_y_data = io_data.get_test_data(one_hot = True)
 test_data_len = len(test_x_data)
 
-X = tf.placeholder("float", [None, 255])
-Y = tf.placeholder("float", [None, 255])
+X = tf.placeholder("float", [None, 225])
+Y = tf.placeholder("float", [None, 225])
 
 dropout_rate = tf.placeholder("float")
 
