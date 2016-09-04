@@ -3,7 +3,7 @@ import numpy as np
 import io_data
 
 
-VERSION = "v.beta"
+VERSION = "v.beta2"
 
 
 initializer = tf.contrib.layers.xavier_initializer()
@@ -50,57 +50,67 @@ def relu_layer(X):
     return tf.nn.relu(X)
 
 
-def pooling_layer(X, ksize, strides):
-    return tf.nn.max_pool(X, ksize=ksize, strides=strides, padding="SAME")
+def max_pooling_layer(X, ksize, strides, padding="SAME"):
+    return tf.nn.max_pool(X, ksize=ksize, strides=strides, padding=padding)
+
+
+def avg_pooling_layer(X, ksize, strides, padding="SAME"):
+    return tf.nn.avg_pool(X, ksize=ksize, strides=strides, padding=padding)
+
+
+def inception(X, depths):
+    input_depth = X.get_shape()[-1]
+    with tf.variable_scope('branch_0'):
+        branch_0 = conv_layer(X, shape=[1, 1, input_depth, depths[0]])
+    with tf.variable_scope('branch_1'):
+        branch_1 = conv_layer(X, shape=[1, 1, input_depth, depths[1]])
+        branch_1 = conv_layer(branch_1, shape=[3, 3, depths[1], depths[2]])
+    with tf.variable_scope('branch_2'):
+        branch_2 = conv_layer(X, shape=[1, 1, input_depth, depths[3]])
+        branch_2 = conv_layer(branch_2, shape=[5, 5, depths[3], depths[4]])
+    with tf.variable_scope('branch_3'):
+        branch_3 = avg_pooling_layer(X, ksize=[1, 3, 3, 1], strides=[1, 1, 1, 1])
+        branch_3 = conv_layer(branch_3, shape=[1, 1, input_depth, depths[5]])
+    return tf.concat(3, [branch_0, branch_1, branch_2, branch_3])
 
 
 def make_model(X, dropout_rate):
     # X's shape is [?, 225]
 
+    end_points = {}
+
     # Construct Conv / ReLU / Pooling layers
-    conv_X = tf.reshape(X, shape=[-1, 15, 15, 1])   # [?, 15, 15, 1]
+    net = tf.reshape(X, shape=[-1, 15, 15, 1])   # [?, 15, 15, 1]
+    end_points['input'] = net
 
     global conv_layer_cnt
     conv_layer_cnt = 0
 
-    L1 = conv_layer(conv_X, shape=[3, 3, 1, 32], strides=[1, 1, 1, 1])  # [?, 15, 15, 32]
-    L1R = relu_layer(L1)
-    L2 = conv_layer(L1R, shape=[3, 3, 32, 32], strides=[1, 1, 1, 1])  # [?, 15, 15, 32]
-    L2R = relu_layer(L2)
-    L3 = conv_layer(L2R, shape=[3, 3, 32, 32], strides=[1, 1, 1, 1])  # [?, 15, 15, 32]
-    L3S = tf.add(L3, L1)
-    L3R = relu_layer(L3S)
 
-    L3P = pooling_layer(L3R, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1])  # [?, 8, 8, 32]
+    net = inception(net, [8,  6,8,  8,12,  4])  # [?, 15, 15, 32]
+    end_points['inception_1'] = net
 
-    L4 = conv_layer(L3P, shape=[3, 3, 32, 64], strides=[1, 1, 1, 1])  # [?, 8, 8, 64]
-    L4R = relu_layer(L4)
-    L5 = conv_layer(L4R, shape=[3, 3, 64, 64], strides=[1, 1, 1, 1])  # [?, 8, 8, 64]
-    L5R = relu_layer(L5)
-    L6 = conv_layer(L5R, shape=[3, 3, 64, 64], strides=[1, 1, 1, 1])  # [?, 8, 8, 64]
-    L6S = tf.add(L6, L4)
-    L6R = relu_layer(L6S)
+    net = inception(net, [16,  12,16,  16,24,  8])  # [?, 15, 15, 64]
+    end_points['inception_2'] = net
 
-    L6P = pooling_layer(L6R, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1])  # [?, 4, 4, 64]
+    net = max_pooling_layer(net, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')  # [?, 7, 7, 64]
+    end_points['pooling_2'] = net
 
-    """
-    L7 = conv_layer(L6P, shape=[3, 3, 64, 128], strides=[1, 1, 1, 1])   # [?, 4, 4, 128]
-    L7R = relu_layer(L7)
-    L8 = conv_layer(L7R, shape=[3, 3, 128, 128], strides=[1, 1, 1, 1])  # [?, 4, 4, 128]
-    L8R = relu_layer(L8)
-    L9 = conv_layer(L8R, shape=[3, 3, 128, 128], strides=[1, 1, 1, 1])  # [?, 4, 4, 128]
-    L9S = tf.add(L9, L7)
-    L9R = relu_layer(L9)
 
-    L9P = pooling_layer(L9R, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1])  # [?, 2, 2, 128]
-    """
+    net = inception(net, [32,  24,32,  32,48,  16])  # [?, 7, 7, 128]
+    end_points['inception_3'] = net
 
-    last_conv_L = L6P
+    net = inception(net, [64,  48,64,  64,96,  32])  # [?, 7, 7, 256]
+    end_points['inception_4'] = net
+
+    net = max_pooling_layer(net, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')  # [?, 3, 3, 256]
+    end_points['pooling_4'] = net
+
 
     # Construct Fully Connected Layers
-    fc_X = tf.reshape(last_conv_L, shape=[-1, 4 * 4 * 64])
+    fc_X = tf.reshape(net, shape=[-1, 3 * 3 * 256])
 
-    fc_L1 = input_layer(fc_X, 4 * 4 * 64, 625, dropout_rate)
+    fc_L1 = input_layer(fc_X, 3 * 3 * 256, 625, dropout_rate)
     fc_L2 = hidden_layer(fc_L1, 625, 625, dropout_rate)
     fc_L3 = hidden_layer(fc_L2, 625, 625, dropout_rate)
     fc_L4 = hidden_layer(fc_L3, 625, 625, dropout_rate)
@@ -206,7 +216,7 @@ with tf.Session() as sess:
     """
     DISPLAY_SAVE_STEP = 1
     TRAINING_EPOCHS = 10000
-    BATCH_SIZE = 2048
+    BATCH_SIZE = 512
 
     def do_train():
         print("[progress] Training model for optimizing cost!", end='', flush=True)
