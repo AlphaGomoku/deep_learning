@@ -113,6 +113,7 @@ import os
 if not os.path.isdir(SAVE_DIR):
     os.mkdir(SAVE_DIR)
 MODEL_SAVE_PATH_WITHOUT_EXTENSION = "{0}/{1}.{2}".format(SAVE_DIR, os.path.basename(__file__), VERSION)
+print(MODEL_SAVE_PATH_WITHOUT_EXTENSION)
 MODEL_SAVE_PATH = MODEL_SAVE_PATH_WITHOUT_EXTENSION + ".ckpt"
 
 def load_model(sess, saver):

@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .model.inception_cnn import (make_model, load_model, )
+from model.cnn import (make_model, load_model, )
 
 
 class QueryManager(object):
@@ -17,4 +17,11 @@ class QueryManager(object):
         load_model(self.sess, saver)
 
     def query(self, state):
-        result = self.sess.run(tf.argmax(self.model_with_softmax, 1), feed_dict={self.X:state, self.dropout_rate:1.0})
+        result = self.sess.run(tf.argmax(self.model_with_softmax, 1), feed_dict={self.X:[state], self.dropout_rate:1.0})
+        return result
+
+
+if __name__ == '__main__':
+    qm = QueryManager()
+    res = qm.query([0 for i in range(225)])
+    print(res)

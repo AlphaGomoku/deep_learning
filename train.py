@@ -1,6 +1,6 @@
 import io_data
 import tensorflow as tf
-from .model.inception_cnn import (make_model, MODEL_SAVE_PATH_WITHOUT_EXTENSION, load_model, remove_model, save_model)
+from model.cnn import (make_model, MODEL_SAVE_PATH_WITHOUT_EXTENSION, load_model, remove_model, save_model)
 
 
 train_x_data, train_y_data, test_x_data, test_y_data = io_data.get_train_test_data(one_hot=True)
