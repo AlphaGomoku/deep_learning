@@ -18,5 +18,3 @@ class QueryManager(object):
 
     def query(self, state):
         result = self.sess.run(tf.argmax(self.model_with_softmax, 1), feed_dict={self.X:state, self.dropout_rate:1.0})
-
-
