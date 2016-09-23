@@ -7,8 +7,8 @@ class QueryManager(object):
         self.X = tf.placeholder("float", [None, 225])
         self.dropout_rate = tf.placeholder("float")
 
-        model = make_model(self.X, self.dropout_rate)
-        self.model_with_softmax = tf.nn.softmax(model)
+        self.model = make_model(self.X, self.dropout_rate)
+        self.model_with_softmax = tf.nn.softmax(self.model)
 
         self.sess = tf.Session()
 
@@ -16,8 +16,17 @@ class QueryManager(object):
         load_model(self.sess, saver)
 
     def query(self, state):
-        result = self.sess.run(tf.argmax(self.model_with_softmax, 1), feed_dict={self.X:[state], self.dropout_rate:1.0})
-        return result[0].item()
+
+        res = self.sess.run(self.model, feed_dict={self.X:[state], self.dropout_rate:1.0})[0]
+
+        best_idx = 0
+        best_val = res[0]
+        for idx, val in enumerate(res):
+            if state[idx] == 0 and best_val < val:
+                best_idx = idx
+                best_val = val
+
+        return best_idx
 
 
 if __name__ == '__main__':
