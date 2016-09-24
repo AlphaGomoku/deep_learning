@@ -23,7 +23,7 @@ class QueryManager(object):
         best_idx = 0
         best_val = res[0]
         for idx, val in enumerate(res):
-            if state[idx] == 0 and best_val < val and (not explicit_go or idx in explicit_go):
+            if state[idx] == 0 and (best_idx is None or best_val < val) and (not explicit_go or idx in explicit_go):
                 best_idx = idx
                 best_val = val
 
