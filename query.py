@@ -1,6 +1,7 @@
 import tensorflow as tf
 from model.inception_cnn import (make_model, load_model, )
 
+
 class QueryManager(object):
 
     def __init__(self):
@@ -15,21 +16,20 @@ class QueryManager(object):
         saver = tf.train.Saver()
         load_model(self.sess, saver)
 
-    def query(self, state):
+    def query(self, state, explicit_go):
 
-        res = self.sess.run(self.model, feed_dict={self.X:[state], self.dropout_rate:1.0})[0]
+        res = self.sess.run(self.model, feed_dict={self.X: [state], self.dropout_rate: 1.0})[0]
 
         best_idx = 0
         best_val = res[0]
         for idx, val in enumerate(res):
-            if state[idx] == 0 and best_val < val:
+            if state[idx] == 0 and best_val < val and (not explicit_go or idx in explicit_go):
                 best_idx = idx
                 best_val = val
 
         return best_idx
 
-
 if __name__ == '__main__':
     qm = QueryManager()
-    res = qm.query([0 for i in range(225)])
+    res = qm.query([0 for i in range(225)], [])
     print(res)
