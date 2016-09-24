@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-VERSION = "v.beta2"
+VERSION = "v.beta3.auto_train_data"
 
 
 initializer = tf.contrib.layers.xavier_initializer()

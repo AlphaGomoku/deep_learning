@@ -1,5 +1,5 @@
 import tensorflow as tf
-from model.cnn import (make_model, load_model, )
+from model.inception_cnn import (make_model, load_model, )
 
 class QueryManager(object):
 
