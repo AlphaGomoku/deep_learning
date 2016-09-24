@@ -6,6 +6,7 @@ from model.inception_cnn import (make_model, MODEL_SAVE_PATH_WITHOUT_EXTENSION, 
 train_x_data, train_y_data, test_x_data, test_y_data = io_data.get_train_test_data(one_hot=True)
 train_data_len = len(train_x_data)
 test_data_len = len(test_x_data)
+print(train_data_len, test_data_len)
 
 X = tf.placeholder("float", [None, 225])
 Y = tf.placeholder("float", [None, 225])

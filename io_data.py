@@ -31,20 +31,11 @@ def get_data(csv_name, one_hot):
 
 
 def get_train_test_data(one_hot = True):
-    data_x, data_y = get_data('data/data.csv', one_hot)
-    data_cnt = len(data_x)
-    train_cnt = data_cnt*3//4
-    train_x = data_x[0:train_cnt]
-    train_y = data_y[0:train_cnt]
-    test_x = data_x[train_cnt:]
-    test_y = data_y[train_cnt:]
+    train_x, train_y = get_data('data/train.csv', one_hot)
+    test_x, test_y = get_data('data/test.csv', one_hot)
 
-
-    print(train_x)
-    print(train_y)
-    print(test_x)
-    print(test_y)
-
+    train_x = test_x = np.concatenate((train_x, test_x), axis=0)
+    train_y = test_y = np.concatenate((train_y, test_y), axis=0)
 
     return train_x, train_y, test_x, test_y
 
