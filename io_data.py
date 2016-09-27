@@ -14,10 +14,8 @@ def get_data(csv_name, one_hot):
 
     # train_x = [int(x) for x in row for row in train_x]
     # labels = [int(x) for x in labels]
-    data_x = np.array(data_x, dtype=np.int32)
+    data_x = np.array(data_x, dtype=np.float32)
     labels = np.array(labels, dtype=np.int32)
-
-    data_x = data_x.astype(dtype=np.float32)
 
     if one_hot:
         a = np.array(labels)
@@ -26,6 +24,8 @@ def get_data(csv_name, one_hot):
         data_y = b
     else:
         data_y = labels
+        
+    data_y = data_y.astype(dtype=np.float32)
 
     return data_x, data_y
 
