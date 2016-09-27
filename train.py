@@ -14,7 +14,8 @@ Y = tf.placeholder("float", [None, 225])
 dropout_rate = tf.placeholder("float")
 
 model = make_model(X, dropout_rate)
-model_with_softmax = tf.nn.softmax(model)
+model_with_softmax = tf.cast(tf.nn.softmax(tf.cast(model, tf.float64)), tf.float32)  # SUCCESS
+#model_with_softmax = tf.nn.softmax(model)  # FAIL
 
 # cross entropy
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(model, Y))
